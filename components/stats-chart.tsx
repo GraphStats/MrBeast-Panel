@@ -5,8 +5,6 @@ import {
   AreaChart,
   Bar,
   BarChart,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -42,20 +40,26 @@ export function StatsChart({ data }: { data: ChartPoint[] }) {
   return (
     <ChartShell>
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 14, right: 16, left: 4, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 14, right: 16, left: 4, bottom: 0 }}>
+          <defs>
+            <linearGradient id="subscribersFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10d9ff" stopOpacity={0.5} />
+              <stop offset="95%" stopColor="#10d9ff" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
           <CartesianGrid stroke="#1d2a45" strokeDasharray="4 4" />
           <XAxis dataKey="time" {...axisProps} minTickGap={30} />
           <YAxis {...axisProps} width={72} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Line
+          <Area
             type="monotone"
             dataKey="subscribers"
             stroke="#10d9ff"
+            fill="url(#subscribersFill)"
             strokeWidth={2.4}
-            dot={false}
             name="Abonnes"
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </ChartShell>
   );
