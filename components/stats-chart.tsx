@@ -3,8 +3,6 @@
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   XAxis,
   CartesianGrid,
   Tooltip,
@@ -95,12 +93,25 @@ export function VideosBarChart({ data }: { data: ChartPoint[] }) {
   return (
     <ChartShell>
       <ResponsiveContainer>
-        <BarChart data={data} margin={{ top: 14, right: 16, left: 4, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 14, right: 16, left: 4, bottom: 0 }}>
+          <defs>
+            <linearGradient id="videosFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#37ffb1" stopOpacity={0.5} />
+              <stop offset="95%" stopColor="#37ffb1" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
           <CartesianGrid stroke="#1d2a45" strokeDasharray="4 4" />
           <XAxis dataKey="time" {...axisProps} minTickGap={30} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Bar dataKey="videos" fill="#37ffb1" name="Videos" radius={[4, 4, 0, 0]} />
-        </BarChart>
+          <Area
+            type="monotone"
+            dataKey="videos"
+            stroke="#37ffb1"
+            fill="url(#videosFill)"
+            strokeWidth={2.2}
+            name="Videos"
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </ChartShell>
   );
