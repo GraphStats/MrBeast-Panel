@@ -49,6 +49,41 @@ export async function GET() {
 
     await ensureSchema();
     const sql = getSql();
+    const latestRows = await sql`
+      SELECT id, channel_id, subscriber_count, video_count, view_count, created_at
+      FROM channel_stats
+      WHERE channel_id = ${CHANNEL_ID}
+      ORDER BY created_at DESC
+      LIMIT 1;
+    `;
+    const latest = latestRows[0] as
+      | {
+          id: number;
+          channel_id: string;
+          subscriber_count: number;
+          video_count: number;
+          view_count: number;
+          created_at: string;
+        }
+      | undefined;
+
+    const nextSubscribers = Math.trunc(subscriberCount);
+    const nextVideos = Math.trunc(videoCount);
+    const nextViews = Math.trunc(viewCount);
+
+    if (
+      latest &&
+      Number(latest.subscriber_count) === nextSubscribers &&
+      Number(latest.video_count) === nextVideos &&
+      Number(latest.view_count) === nextViews
+    ) {
+      return NextResponse.json({
+        success: true,
+        source: SOURCE_URL,
+        inserted: false,
+        row: latest
+      });
+    }
 
     const inserted = await sql`
       INSERT INTO channel_stats (
@@ -59,9 +94,9 @@ export async function GET() {
       )
       VALUES (
         ${CHANNEL_ID},
-        ${Math.trunc(subscriberCount)},
-        ${Math.trunc(videoCount)},
-        ${Math.trunc(viewCount)}
+        ${nextSubscribers},
+        ${nextVideos},
+        ${nextViews}
       )
       RETURNING id, channel_id, subscriber_count, video_count, view_count, created_at;
     `;
@@ -69,6 +104,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       source: SOURCE_URL,
+      inserted: true,
       row: inserted[0]
     });
   } catch (error) {
