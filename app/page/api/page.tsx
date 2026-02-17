@@ -10,7 +10,7 @@ export default function ApiDocsPage() {
           <p className="kicker">API Reference</p>
           <h1>MrBeast Stats API</h1>
           <p className="intro">
-            This page explains how to collect new snapshots and query historical data from your local API routes.
+            This page explains how to collect new snapshots and query historical data from your deployed API routes.
           </p>
         </div>
       </section>
@@ -25,7 +25,7 @@ export default function ApiDocsPage() {
             Action: calls Mixerno API, validates payload, and inserts one row in <code>channel_stats</code> if values
             changed.
           </p>
-          <p className="detail">Example: <code>curl http://localhost:3000/api/get-api-count</code></p>
+          <p className="detail">Example: <code>curl https://mrbeast-panel.vercel.app/api/get-api-count</code></p>
         </article>
 
         <article className="stat-card">
@@ -41,7 +41,7 @@ export default function ApiDocsPage() {
               </code>
             ))}
           </p>
-          <p className="detail">Example: <code>curl &quot;http://localhost:3000/api/stats?range=6h&quot;</code></p>
+          <p className="detail">Example: <code>curl &quot;https://mrbeast-panel.vercel.app/api/stats?range=6h&quot;</code></p>
         </article>
 
         <article className="stat-card">
