@@ -4,6 +4,7 @@ import {
   Area,
   AreaChart,
   XAxis,
+  YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer
@@ -33,7 +34,28 @@ function ChartShell({ children }: { children: React.ReactNode }) {
   return <div style={{ width: "100%", height: 320 }}>{children}</div>;
 }
 
+function buildAdaptiveDomain(values: number[]): [number, number] {
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  if (finiteValues.length === 0) {
+    return [0, 1];
+  }
+
+  const min = Math.min(...finiteValues);
+  const max = Math.max(...finiteValues);
+
+  if (min === max) {
+    const padding = min === 0 ? 1 : Math.abs(min) * 0.02;
+    return [min - padding, max + padding];
+  }
+
+  const span = max - min;
+  const padding = span * 0.1;
+  return [min - padding, max + padding];
+}
+
 export function StatsChart({ data }: { data: ChartPoint[] }) {
+  const yDomain = buildAdaptiveDomain(data.map((point) => point.subscribers));
+
   return (
     <ChartShell>
       <ResponsiveContainer>
@@ -46,6 +68,7 @@ export function StatsChart({ data }: { data: ChartPoint[] }) {
           </defs>
           <CartesianGrid stroke="#1d2a45" strokeDasharray="4 4" />
           <XAxis dataKey="time" {...axisProps} minTickGap={30} />
+          <YAxis hide domain={yDomain} />
           <Tooltip contentStyle={tooltipStyle} />
           <Area
             type="monotone"
@@ -62,6 +85,8 @@ export function StatsChart({ data }: { data: ChartPoint[] }) {
 }
 
 export function ViewsAreaChart({ data }: { data: ChartPoint[] }) {
+  const yDomain = buildAdaptiveDomain(data.map((point) => point.views));
+
   return (
     <ChartShell>
       <ResponsiveContainer>
@@ -74,6 +99,7 @@ export function ViewsAreaChart({ data }: { data: ChartPoint[] }) {
           </defs>
           <CartesianGrid stroke="#1d2a45" strokeDasharray="4 4" />
           <XAxis dataKey="time" {...axisProps} minTickGap={30} />
+          <YAxis hide domain={yDomain} />
           <Tooltip contentStyle={tooltipStyle} />
           <Area
             type="monotone"
@@ -90,6 +116,8 @@ export function ViewsAreaChart({ data }: { data: ChartPoint[] }) {
 }
 
 export function VideosBarChart({ data }: { data: ChartPoint[] }) {
+  const yDomain = buildAdaptiveDomain(data.map((point) => point.videos));
+
   return (
     <ChartShell>
       <ResponsiveContainer>
@@ -102,6 +130,7 @@ export function VideosBarChart({ data }: { data: ChartPoint[] }) {
           </defs>
           <CartesianGrid stroke="#1d2a45" strokeDasharray="4 4" />
           <XAxis dataKey="time" {...axisProps} minTickGap={30} />
+          <YAxis hide domain={yDomain} />
           <Tooltip contentStyle={tooltipStyle} />
           <Area
             type="monotone"
