@@ -48,28 +48,6 @@ function computeDelta(latest: ApiRow | undefined, baseline: ApiRow | undefined, 
   return Number(latest[key]) - Number(baseline[key]);
 }
 
-function subtractRange(baseDate: Date, range: TimeRange) {
-  const d = new Date(baseDate);
-
-  if (range === "1d") {
-    d.setDate(d.getDate() - 1);
-  }
-  if (range === "7d") {
-    d.setDate(d.getDate() - 7);
-  }
-  if (range === "1m") {
-    d.setMonth(d.getMonth() - 1);
-  }
-  if (range === "6m") {
-    d.setMonth(d.getMonth() - 6);
-  }
-  if (range === "1y") {
-    d.setFullYear(d.getFullYear() - 1);
-  }
-
-  return d;
-}
-
 function findBaseline(rows: ApiRow[], targetMs: number) {
   if (rows.length === 0) {
     return undefined;
@@ -99,7 +77,7 @@ export default function HomePage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("1m");
 
   const loadStats = useCallback(async () => {
-    const response = await fetch("/api/stats?limit=200", { cache: "no-store" });
+    const response = await fetch(`/api/stats?range=${timeRange}`, { cache: "no-store" });
     const bodyText = await response.text();
     let json: StatsResponse;
 
@@ -114,7 +92,7 @@ export default function HomePage() {
     }
 
     setRows(json.data);
-  }, []);
+  }, [timeRange]);
 
   const handlePing = useCallback(async () => {
     setLoading(true);
@@ -156,19 +134,9 @@ export default function HomePage() {
   const first = rows[0];
   const previous = rows[rows.length - 2];
 
-  const filteredRows = useMemo(() => {
-    if (!latest) {
-      return rows;
-    }
-
-    const cutoff = subtractRange(new Date(latest.created_at), timeRange).getTime();
-    const subset = rows.filter((row) => new Date(row.created_at).getTime() >= cutoff);
-    return subset.length > 0 ? subset : [latest];
-  }, [rows, latest, timeRange]);
-
   const chartData = useMemo(
     () =>
-      filteredRows.map((row) => ({
+      rows.map((row) => ({
         time: new Date(row.created_at).toLocaleString("en-US", {
           day: "2-digit",
           month: "2-digit",
@@ -179,7 +147,7 @@ export default function HomePage() {
         views: Number(row.view_count),
         videos: Number(row.video_count)
       })),
-    [filteredRows]
+    [rows]
   );
 
   const cards = useMemo(
