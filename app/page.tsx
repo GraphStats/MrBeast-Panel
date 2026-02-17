@@ -22,19 +22,19 @@ type StatsResponse = {
 type TimeRange = "1d" | "7d" | "1m" | "6m" | "1y";
 
 const RANGE_OPTIONS: { key: TimeRange; label: string }[] = [
-  { key: "1d", label: "1 jour" },
-  { key: "7d", label: "7 jours" },
-  { key: "1m", label: "1 mois" },
-  { key: "6m", label: "6 mois" },
-  { key: "1y", label: "1 an" }
+  { key: "1d", label: "1 day" },
+  { key: "7d", label: "7 days" },
+  { key: "1m", label: "1 month" },
+  { key: "6m", label: "6 months" },
+  { key: "1y", label: "1 year" }
 ];
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat("fr-FR").format(value);
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function formatCompact(value: number) {
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat("en-US", {
     notation: "compact",
     maximumFractionDigits: 1
   }).format(value);
@@ -106,11 +106,11 @@ export default function HomePage() {
     try {
       json = JSON.parse(bodyText) as StatsResponse;
     } catch {
-      throw new Error("La route /api/stats a retourne du HTML (check serveur/env).");
+      throw new Error("The /api/stats route returned HTML (check server/env).");
     }
 
     if (!response.ok || !json.success) {
-      throw new Error(json.error ?? "Impossible de charger les stats.");
+      throw new Error(json.error ?? "Unable to load stats.");
     }
 
     setRows(json.data);
@@ -131,16 +131,16 @@ export default function HomePage() {
       try {
         result = JSON.parse(bodyText) as { success?: boolean; error?: string };
       } catch {
-        throw new Error("La route /get-api-count a retourne du HTML.");
+        throw new Error("The /get-api-count route returned HTML.");
       }
 
       if (!ping.ok || !result.success) {
-        throw new Error(result.error ?? "Erreur pendant la collecte.");
+        throw new Error(result.error ?? "Error during collection.");
       }
 
       await loadStats();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue.");
+      setError(e instanceof Error ? e.message : "Unknown error.");
     } finally {
       setLoading(false);
     }
@@ -148,7 +148,7 @@ export default function HomePage() {
 
   useEffect(() => {
     loadStats().catch((e: unknown) => {
-      setError(e instanceof Error ? e.message : "Erreur inconnue.");
+      setError(e instanceof Error ? e.message : "Unknown error.");
     });
   }, [loadStats]);
 
@@ -169,7 +169,7 @@ export default function HomePage() {
   const chartData = useMemo(
     () =>
       filteredRows.map((row) => ({
-        time: new Date(row.created_at).toLocaleString("fr-FR", {
+        time: new Date(row.created_at).toLocaleString("en-US", {
           day: "2-digit",
           month: "2-digit",
           hour: "2-digit",
@@ -185,31 +185,31 @@ export default function HomePage() {
   const cards = useMemo(
     () => [
       {
-        label: "Abonnes",
+        label: "Subscribers",
         value: latest ? formatNumber(Number(latest.subscriber_count)) : "-",
         detail: previous
           ? `${Number(latest?.subscriber_count) - Number(previous.subscriber_count) >= 0 ? "+" : ""}${formatNumber(
               Number(latest?.subscriber_count) - Number(previous.subscriber_count)
-            )} depuis le dernier point`
-          : "Pas assez de donnees"
+            )} since the last point`
+          : "Not enough data"
       },
       {
-        label: "Vues totales",
+        label: "Total views",
         value: latest ? formatNumber(Number(latest.view_count)) : "-",
         detail: first
           ? `${computeDelta(latest, first, "view_count") >= 0 ? "+" : ""}${formatCompact(
               computeDelta(latest, first, "view_count")
-            )} sur la periode`
-          : "Pas assez de donnees"
+            )} over the period`
+          : "Not enough data"
       },
       {
-        label: "Nombre de videos",
+        label: "Videos",
         value: latest ? formatNumber(Number(latest.video_count)) : "-",
         detail: first
           ? `${computeDelta(latest, first, "video_count") >= 0 ? "+" : ""}${formatNumber(
               computeDelta(latest, first, "video_count")
-            )} sur la periode`
-          : "Pas assez de donnees"
+            )} over the period`
+          : "Not enough data"
       }
     ],
     [latest, previous, first]
@@ -218,11 +218,11 @@ export default function HomePage() {
   const growthCards = useMemo(() => {
     if (!latest || rows.length === 0) {
       return [
-        { label: "2026 Growth", value: "-", detail: "Pas de donnees" },
-        { label: "24 Hour Growth", value: "-", detail: "Pas de donnees" },
-        { label: "7 Day Growth", value: "-", detail: "Pas de donnees" },
-        { label: "30 Day Growth", value: "-", detail: "Pas de donnees" },
-        { label: "365 Day Growth", value: "-", detail: "Pas de donnees" }
+        { label: "2026 Growth", value: "-", detail: "No data" },
+        { label: "24 Hour Growth", value: "-", detail: "No data" },
+        { label: "7 Day Growth", value: "-", detail: "No data" },
+        { label: "30 Day Growth", value: "-", detail: "No data" },
+        { label: "365 Day Growth", value: "-", detail: "No data" }
       ];
     }
 
@@ -240,7 +240,7 @@ export default function HomePage() {
       return {
         label,
         value: formatSigned(delta),
-        detail: baseline ? `Base: ${new Date(baseline.created_at).toLocaleDateString("fr-FR")}` : "Pas de baseline"
+        detail: baseline ? `Base: ${new Date(baseline.created_at).toLocaleDateString("en-US")}` : "No baseline"
       };
     };
 
@@ -262,7 +262,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {error ? <p className="error">Erreur: {error}</p> : null}
+      {error ? <p className="error">Error: {error}</p> : null}
 
       <section className="stats-grid">
         {cards.map((card) => (
@@ -276,7 +276,7 @@ export default function HomePage() {
 
       <section className="panel chart-stack">
         <div className="panel-head">
-          <h2>Graphiques historiques</h2>
+          <h2>Historical charts</h2>
           <div className="panel-tools">
             <div className="timeframe-picker">
               {RANGE_OPTIONS.map((option) => (
@@ -293,15 +293,15 @@ export default function HomePage() {
           </div>
         </div>
         <article className="chart-card">
-          <div className="label">Evolution du nombre d abonnes</div>
+          <div className="label">Subscriber count trend</div>
           <StatsChart data={chartData} />
         </article>
         <article className="chart-card">
-          <div className="label">Evolution des vues</div>
+          <div className="label">Views trend</div>
           <ViewsAreaChart data={chartData} />
         </article>
         <article className="chart-card">
-          <div className="label">Evolution du nombre de videos</div>
+          <div className="label">Video count trend</div>
           <VideosBarChart data={chartData} />
         </article>
       </section>

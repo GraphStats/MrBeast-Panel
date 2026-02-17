@@ -1,20 +1,20 @@
 # MrBeast Stats Dashboard (Next.js + Neon)
 
-Site Next.js deployable sur Vercel avec:
-- API `GET /api/get-api-count` qui ping Mixerno puis insere en base Neon
-- API `GET /api/stats` qui renvoie l'historique
-- Dashboard avec compteurs et graphique
+A Next.js site deployable on Vercel with:
+- API `GET /api/get-api-count` that pings Mixerno and inserts the result into Neon
+- API `GET /api/stats` that returns historical records
+- Dashboard with counters and charts
 
-## 1) Installation locale
+## 1) Local installation
 
 ```bash
 npm install
 cp .env.example .env.local
 ```
 
-Remplis `DATABASE_URL` avec ta chaine Neon.
+Set `DATABASE_URL` with your Neon connection string.
 
-Puis:
+Then:
 
 ```bash
 npm run dev
@@ -24,26 +24,26 @@ npm run dev
 
 - `GET /api/get-api-count`
   - Fetch: `https://backend.mixerno.space/api/youtube/estv3/UCX6OQ3DkcsbYNE6H8uQQuVA`
-  - Lit `subscriberCount`, `videoCount`, `viewCount`
-  - Insert dans `channel_stats`
+  - Reads `subscriberCount`, `videoCount`, `viewCount`
+  - Inserts into `channel_stats`
 
 - `GET /api/stats?limit=200`
-  - Retourne les N derniers points, ordre chronologique
+  - Returns the last N points in chronological order
 
 ## 3) Structure DB
 
-Le schema est dans `sql/init.sql`.
-Le code cree aussi la table automatiquement si elle n'existe pas.
+The schema is in `sql/init.sql`.
+The code also creates the table automatically if it does not exist.
 
 ## 4) Deploy Vercel
 
-1. Push sur GitHub
-2. Import du repo dans Vercel
-3. Ajoute la variable d'environnement `DATABASE_URL`
+1. Push to GitHub
+2. Import the repo into Vercel
+3. Add the `DATABASE_URL` environment variable
 4. Deploy
 
-## 5) Ping automatique (optionnel)
+## 5) Automatic ping (optional)
 
-Tu peux scheduler `/api/get-api-count` avec:
+You can schedule `/api/get-api-count` with:
 - Vercel Cron
-- ou UptimeRobot / cron externe
+- or UptimeRobot / external cron

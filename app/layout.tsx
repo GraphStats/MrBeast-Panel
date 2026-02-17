@@ -9,14 +9,14 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: "MrBeast Live Stats",
-  description: "Dashboard avec compteurs et historique stocke dans Neon."
+  description: "Dashboard with counters and history stored in Neon."
 };
 
 export default function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
+    <html lang="en">
       <body className={sora.variable}>{children}</body>
     </html>
   );

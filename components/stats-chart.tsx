@@ -76,7 +76,7 @@ export function StatsChart({ data }: { data: ChartPoint[] }) {
             stroke="#10d9ff"
             fill="url(#subscribersFill)"
             strokeWidth={2.4}
-            name="Abonnes"
+            name="Subscribers"
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -107,7 +107,7 @@ export function ViewsAreaChart({ data }: { data: ChartPoint[] }) {
             stroke="#3ba7ff"
             fill="url(#viewsFill)"
             strokeWidth={2.2}
-            name="Vues"
+            name="Views"
           />
         </AreaChart>
       </ResponsiveContainer>
