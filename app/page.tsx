@@ -53,6 +53,11 @@ function findBaseline(rows: ApiRow[], targetMs: number) {
     return undefined;
   }
 
+  const firstMs = new Date(rows[0].created_at).getTime();
+  if (targetMs < firstMs) {
+    return undefined;
+  }
+
   let baseline = rows[0];
   for (const row of rows) {
     const rowMs = new Date(row.created_at).getTime();
@@ -72,7 +77,7 @@ function formatSigned(value: number) {
 
 export default function HomePage() {
   const [rows, setRows] = useState<ApiRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [growthRows, setGrowthRows] = useState<ApiRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>("1m");
 
@@ -94,51 +99,29 @@ export default function HomePage() {
     setRows(json.data);
   }, [timeRange]);
 
-  const handlePing = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadGrowthStats = useCallback(async () => {
+    const response = await fetch("/api/stats?range=1y", { cache: "no-store" });
+    const bodyText = await response.text();
+    let json: StatsResponse;
 
     try {
-      const ping = await fetch("/api/get-api-count", {
-        method: "GET",
-        cache: "no-store"
-      });
-      const bodyText = await ping.text();
-      let result: { success?: boolean; error?: string };
-
-      try {
-        result = JSON.parse(bodyText) as { success?: boolean; error?: string };
-      } catch {
-        throw new Error("The /get-api-count route returned HTML.");
-      }
-
-      if (!ping.ok || !result.success) {
-        throw new Error(result.error ?? "Error during collection.");
-      }
-
-      await loadStats();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error.");
-    } finally {
-      setLoading(false);
+      json = JSON.parse(bodyText) as StatsResponse;
+    } catch {
+      throw new Error("The /api/stats route returned HTML (check server/env).");
     }
-  }, [loadStats]);
+
+    if (!response.ok || !json.success) {
+      throw new Error(json.error ?? "Unable to load growth stats.");
+    }
+
+    setGrowthRows(json.data);
+  }, []);
 
   useEffect(() => {
-    loadStats().catch((e: unknown) => {
+    Promise.all([loadStats(), loadGrowthStats()]).catch((e: unknown) => {
       setError(e instanceof Error ? e.message : "Unknown error.");
     });
-  }, [loadStats]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handlePing().catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : "Unknown error.");
-      });
-    }, 15 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [handlePing]);
+  }, [loadStats, loadGrowthStats]);
 
   const latest = rows[rows.length - 1];
   const first = rows[0];
@@ -194,7 +177,9 @@ export default function HomePage() {
   );
 
   const growthCards = useMemo(() => {
-    if (!latest || rows.length === 0) {
+    const growthLatest = growthRows[growthRows.length - 1];
+
+    if (!growthLatest || growthRows.length === 0) {
       return [
         { label: "2026 Growth", value: "-", detail: "No data" },
         { label: "24 Hour Growth", value: "-", detail: "No data" },
@@ -204,20 +189,20 @@ export default function HomePage() {
       ];
     }
 
-    const latestMs = new Date(latest.created_at).getTime();
+    const latestMs = new Date(growthLatest.created_at).getTime();
     const start2026Ms = new Date(2026, 0, 1, 0, 0, 0).getTime();
-    const first2026 = rows.find((row) => new Date(row.created_at).getTime() >= start2026Ms);
-    const baseline2026 = first2026 ?? rows[0];
-    const baseline24h = findBaseline(rows, latestMs - 24 * 60 * 60 * 1000);
-    const baseline7d = findBaseline(rows, latestMs - 7 * 24 * 60 * 60 * 1000);
-    const baseline30d = findBaseline(rows, latestMs - 30 * 24 * 60 * 60 * 1000);
-    const baseline365d = findBaseline(rows, latestMs - 365 * 24 * 60 * 60 * 1000);
+    const first2026 = growthRows.find((row) => new Date(row.created_at).getTime() >= start2026Ms);
+    const baseline2026 = first2026;
+    const baseline24h = findBaseline(growthRows, latestMs - 24 * 60 * 60 * 1000);
+    const baseline7d = findBaseline(growthRows, latestMs - 7 * 24 * 60 * 60 * 1000);
+    const baseline30d = findBaseline(growthRows, latestMs - 30 * 24 * 60 * 60 * 1000);
+    const baseline365d = findBaseline(growthRows, latestMs - 365 * 24 * 60 * 60 * 1000);
 
     const makeCard = (label: string, baseline: ApiRow | undefined) => {
-      const delta = computeDelta(latest, baseline, "subscriber_count");
+      const delta = computeDelta(growthLatest, baseline, "subscriber_count");
       return {
         label,
-        value: formatSigned(delta),
+        value: baseline ? formatSigned(delta) : "-",
         detail: baseline ? `Base: ${new Date(baseline.created_at).toLocaleDateString("en-US")}` : "No baseline"
       };
     };
@@ -229,7 +214,7 @@ export default function HomePage() {
       makeCard("30 Day Growth", baseline30d),
       makeCard("365 Day Growth", baseline365d)
     ];
-  }, [latest, rows]);
+  }, [growthRows]);
 
   return (
     <main className="dashboard">
@@ -256,9 +241,6 @@ export default function HomePage() {
         <div className="panel-head">
           <h2>Historical charts</h2>
           <div className="panel-tools">
-            <button type="button" className="btn" onClick={handlePing} disabled={loading}>
-              {loading ? "Collecting..." : "Collect now"}
-            </button>
             <div className="timeframe-picker">
               {RANGE_OPTIONS.map((option) => (
                 <button
