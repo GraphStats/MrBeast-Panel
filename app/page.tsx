@@ -48,27 +48,19 @@ function computeDelta(latest: ApiRow | undefined, baseline: ApiRow | undefined, 
   return Number(latest[key]) - Number(baseline[key]);
 }
 
-function findBaseline(rows: ApiRow[], targetMs: number) {
+function findBaselineAtOrAfter(rows: ApiRow[], targetMs: number) {
   if (rows.length === 0) {
     return undefined;
   }
 
-  const firstMs = new Date(rows[0].created_at).getTime();
-  if (targetMs < firstMs) {
-    return undefined;
-  }
-
-  let baseline = rows[0];
   for (const row of rows) {
     const rowMs = new Date(row.created_at).getTime();
-    if (rowMs <= targetMs) {
-      baseline = row;
-    } else {
-      break;
+    if (rowMs >= targetMs) {
+      return row;
     }
   }
 
-  return baseline;
+  return rows[rows.length - 1];
 }
 
 function formatSigned(value: number) {
@@ -203,10 +195,10 @@ export default function HomePage() {
     const start2026Ms = new Date(2026, 0, 1, 0, 0, 0).getTime();
     const first2026 = growthRows.find((row) => new Date(row.created_at).getTime() >= start2026Ms);
     const baseline2026 = first2026;
-    const baseline24h = findBaseline(growthRows, latestMs - 24 * 60 * 60 * 1000);
-    const baseline7d = findBaseline(growthRows, latestMs - 7 * 24 * 60 * 60 * 1000);
-    const baseline30d = findBaseline(growthRows, latestMs - 30 * 24 * 60 * 60 * 1000);
-    const baseline365d = findBaseline(growthRows, latestMs - 365 * 24 * 60 * 60 * 1000);
+    const baseline24h = findBaselineAtOrAfter(growthRows, latestMs - 24 * 60 * 60 * 1000);
+    const baseline7d = findBaselineAtOrAfter(growthRows, latestMs - 7 * 24 * 60 * 60 * 1000);
+    const baseline30d = findBaselineAtOrAfter(growthRows, latestMs - 30 * 24 * 60 * 60 * 1000);
+    const baseline365d = findBaselineAtOrAfter(growthRows, latestMs - 365 * 24 * 60 * 60 * 1000);
 
     const makeCard = (label: string, baseline: ApiRow | undefined) => {
       const effectiveBaseline = baseline ?? growthRows[0];
