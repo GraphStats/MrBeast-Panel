@@ -75,6 +75,16 @@ function formatSigned(value: number) {
   return `${value >= 0 ? "+" : ""}${formatNumber(value)}`;
 }
 
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 export default function HomePage() {
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [growthRows, setGrowthRows] = useState<ApiRow[]>([]);
@@ -205,18 +215,30 @@ export default function HomePage() {
         label,
         value: formatSigned(delta),
         detail: baseline
-          ? `Base: ${new Date(effectiveBaseline.created_at).toLocaleDateString("en-US")}`
-          : `Base: ${new Date(effectiveBaseline.created_at).toLocaleDateString("en-US")} (partial history)`
+          ? `Base: ${formatDateTime(effectiveBaseline.created_at)}`
+          : `Base: ${formatDateTime(effectiveBaseline.created_at)} (partial history)`
       };
     };
 
-    return [
+    const has24hCoverage =
+      new Date(growthLatest.created_at).getTime() - new Date(growthRows[0].created_at).getTime() >= 24 * 60 * 60 * 1000;
+
+    const cards = [
       makeCard("2026 Growth", baseline2026),
       makeCard("24 Hour Growth", baseline24h),
       makeCard("7 Day Growth", baseline7d),
       makeCard("30 Day Growth", baseline30d),
       makeCard("365 Day Growth", baseline365d)
     ];
+
+    if (!has24hCoverage) {
+      cards[1] = {
+        ...cards[1],
+        detail: `${cards[1].detail} (less than 24h between first and latest point)`
+      };
+    }
+
+    return cards;
   }, [growthRows]);
 
   return (
