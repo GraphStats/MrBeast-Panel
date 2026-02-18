@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/get-api-count",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

@@ -99,7 +99,7 @@ export default function HomePage() {
     setError(null);
 
     try {
-      const ping = await fetch("/get-api-count", {
+      const ping = await fetch("/api/get-api-count", {
         method: "GET",
         cache: "no-store"
       });
@@ -129,6 +129,16 @@ export default function HomePage() {
       setError(e instanceof Error ? e.message : "Unknown error.");
     });
   }, [loadStats]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handlePing().catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : "Unknown error.");
+      });
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [handlePing]);
 
   const latest = rows[rows.length - 1];
   const first = rows[0];
@@ -246,6 +256,9 @@ export default function HomePage() {
         <div className="panel-head">
           <h2>Historical charts</h2>
           <div className="panel-tools">
+            <button type="button" className="btn" onClick={handlePing} disabled={loading}>
+              {loading ? "Collecting..." : "Collect now"}
+            </button>
             <div className="timeframe-picker">
               {RANGE_OPTIONS.map((option) => (
                 <button
