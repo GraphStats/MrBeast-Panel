@@ -199,11 +199,14 @@ export default function HomePage() {
     const baseline365d = findBaseline(growthRows, latestMs - 365 * 24 * 60 * 60 * 1000);
 
     const makeCard = (label: string, baseline: ApiRow | undefined) => {
-      const delta = computeDelta(growthLatest, baseline, "subscriber_count");
+      const effectiveBaseline = baseline ?? growthRows[0];
+      const delta = computeDelta(growthLatest, effectiveBaseline, "subscriber_count");
       return {
         label,
-        value: baseline ? formatSigned(delta) : "-",
-        detail: baseline ? `Base: ${new Date(baseline.created_at).toLocaleDateString("en-US")}` : "No baseline"
+        value: formatSigned(delta),
+        detail: baseline
+          ? `Base: ${new Date(effectiveBaseline.created_at).toLocaleDateString("en-US")}`
+          : `Base: ${new Date(effectiveBaseline.created_at).toLocaleDateString("en-US")} (partial history)`
       };
     };
 
